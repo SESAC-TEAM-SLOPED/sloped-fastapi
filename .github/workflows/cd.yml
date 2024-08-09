@@ -91,19 +91,19 @@ jobs:
           
           # Stop the existing FastAPI container
           echo "Stopping existing FastAPI container..."
-          docker-compose stop fastapi-app
+          docker-compose stop fastapi-container
           
           # Remove the existing FastAPI container
           echo "Removing existing FastAPI container..."
-          docker-compose rm -f fastapi-app
+          docker-compose rm -f fastapi-container
           
           # Start the new FastAPI container
           echo "Starting new FastAPI container..."
-          docker-compose up -d fastapi-app
+          docker-compose up -d fastapi-container
           
           # Verify the FastAPI container is running
           echo "Verifying FastAPI container status..."
-          docker-compose ps fastapi-app
+          docker-compose ps fastapi-container
           
           # Cleanup
           echo "Cleaning up old images..."
