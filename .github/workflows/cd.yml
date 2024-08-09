@@ -84,7 +84,7 @@ jobs:
           
           # Create .env file
           echo "Creating .env file..."
-          echo "${{ secrets.ENV_CONTENT }}" > .env
+          echo "${{ env.ENV_CONTENT }}" > .env
           
           # Stop and remove the existing FastAPI container if it exists
           echo "Stopping existing FastAPI container..."
