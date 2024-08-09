@@ -74,10 +74,6 @@ jobs:
           echo "Changing to /home/opc/docker directory..."
           cd /home/opc/docker
           
-          # Create or update .env file
-          echo "Creating .env file..."
-          echo "${{ secrets.ENV_CONTENT }}" > /home/opc/docker/fastapi/.env
-          
           # Login to GitHub Container Registry
           echo "Logging in to GitHub Container Registry..."
           echo ${{ secrets.PAT_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -86,8 +82,12 @@ jobs:
           echo "Pulling the latest image..."
           docker pull ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest
           
-          # Update the image in docker-compose.yml
-          sed -i "s|image: sloped-fastapi:latest|image: ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest|" docker-compose.yml
+          # Create .env file
+          echo "Creating .env file..."
+          echo "${{ secrets.ENV_CONTENT }}" > .env
+          
+          # Update docker-compose.yml to mount .env file
+          sed -i "/image: ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest/a\    volumes:\n      - ./env:/app/.env" docker-compose.yml
           
           # Stop the existing FastAPI container
           echo "Stopping existing FastAPI container..."
