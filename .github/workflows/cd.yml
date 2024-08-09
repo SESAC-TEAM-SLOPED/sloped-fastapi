@@ -84,7 +84,7 @@ jobs:
           
           # Create .env file
           echo "Creating .env file..."
-          echo "${{ env.ENV_CONTENT }}" > .env
+          echo "${{ env.ENV_CONTENT }}" > fastapi/.env
           
           # Stop and remove the existing FastAPI container if it exists
           echo "Stopping existing FastAPI container..."
@@ -95,7 +95,7 @@ jobs:
           echo "Starting new FastAPI container..."
           docker run -d --name fastapi-container \
             -p 8000:8000 \
-            -v $(pwd)/.env:/app/.env \
+            -v $(pwd)/fastapi/.env:/app/.env \
             ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest
           
           # Verify the FastAPI container is running
