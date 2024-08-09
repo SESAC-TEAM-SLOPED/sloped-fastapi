@@ -17,6 +17,10 @@ jobs:
       packages: write
 
     steps:
+    - name: Create .env file
+      run: |
+        echo "{{ secrets.env }}" >> .env
+        
     - name: Checkout repository
       uses: actions/checkout@v2
 
@@ -45,6 +49,8 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest
           ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        secrets: |
+          "env_file=.env"
 
   deploy:
     needs: build-and-push
