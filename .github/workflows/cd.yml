@@ -1,0 +1,91 @@
+name: FastAPI CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Convert repository name to lowercase
+      run: echo "REPO_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      
+    - name: Log in to the Container registry
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.PAT_TOKEN }}
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v3
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Convert repository name to lowercase
+      run: echo "REPO_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      
+    - name: Deploy to EC2
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        HOST_NAME: ${{ secrets.EC2_HOST }}
+        USER_NAME: ${{ secrets.EC2_USER }}
+      run: |
+        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+        ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} '
+          set -e
+          echo "Deployment started..."
+          
+          # Login to GitHub Container Registry
+          echo "Logging in to GitHub Container Registry..."
+          echo ${{ secrets.PAT_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # Pull the latest image
+          echo "Pulling the latest image..."
+          docker pull ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest
+          
+          # Stop and remove the existing container (if it exists)
+          echo "Stopping and removing existing container..."
+          docker stop fastapi-app || true
+          docker rm fastapi-app || true
+          
+          # Run the new container
+          echo "Starting new container..."
+          docker run -d --name fastapi-app -p 8000:8000 --restart unless-stopped ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest
+          
+          # Verify the container is running
+          echo "Verifying container status..."
+          docker ps | grep fastapi-app
+          
+          # Cleanup
+          echo "Cleaning up old images..."
+          docker image prune -f
+          
+          echo "Deployment completed successfully!"
+        '
