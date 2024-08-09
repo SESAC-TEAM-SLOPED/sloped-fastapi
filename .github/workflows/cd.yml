@@ -70,18 +70,24 @@ jobs:
           echo "Pulling the latest image..."
           docker pull ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest
           
-          # Stop and remove the existing container (if it exists)
-          echo "Stopping and removing existing container..."
-          docker stop fastapi-app || true
-          docker rm fastapi-app || true
+          # Update the image in docker-compose.yml
+          sed -i "s|image: sloped-fastapi:latest|image: ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest|" docker-compose.yml
           
-          # Run the new container
-          echo "Starting new container..."
-          docker run -d --name fastapi-app -p 8000:8000 --restart unless-stopped ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest
+          # Stop the existing FastAPI container
+          echo "Stopping existing FastAPI container..."
+          docker-compose stop fastapi-app
           
-          # Verify the container is running
-          echo "Verifying container status..."
-          docker ps | grep fastapi-app
+          # Remove the existing FastAPI container
+          echo "Removing existing FastAPI container..."
+          docker-compose rm -f fastapi-app
+          
+          # Start the new FastAPI container
+          echo "Starting new FastAPI container..."
+          docker-compose up -d fastapi-app
+          
+          # Verify the FastAPI container is running
+          echo "Verifying FastAPI container status..."
+          docker-compose ps fastapi-app
           
           # Cleanup
           echo "Cleaning up old images..."
