@@ -236,9 +236,9 @@ async def process_facility(facility_id: int, review_id: int):
         if success:
             return {"status": "success", "message": "RAG 검색 성공"}
         else:
-            raise HTTPException(status_code=500, detail="시설과 시설리뷰 업데이트에 실패하였습니다")
+            raise HTTPException(status_code=500, detail={"status": "fail", "message": "시설과 시설리뷰 업데이트에 실패하였습니다"})
     else:
-        raise HTTPException(status_code=404, detail="존재하지 않는 시설입니다")
+        raise HTTPException(status_code=404, detail={"status": "fail", "message": "존재하지 않는 시설입니다"})
 
 
 if __name__ == "__main__":
