@@ -92,15 +92,17 @@ jobs:
           docker rm fastapi-container || true
           
           # Start the new FastAPI container
+          # Stop and remove the existing FastAPI container if it exists
+          echo "Stopping and removing existing FastAPI container..."
+          docker-compose down
+          
+          # Start the new FastAPI container
           echo "Starting new FastAPI container..."
-          docker run -d --name fastapi-container \
-            -p 8000:8000 \
-            -v $(pwd)/fastapi/.env:/app/.env \
-            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest
+          docker-compose up -d fastapi-app
           
           # Verify the FastAPI container is running
           echo "Verifying FastAPI container status..."
-          docker ps | grep fastapi-container
+          docker-compose ps fastapi-app
           
           # Cleanup
           echo "Cleaning up old images..."
