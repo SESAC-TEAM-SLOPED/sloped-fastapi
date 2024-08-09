@@ -64,6 +64,7 @@ jobs:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
         HOST_NAME: ${{ secrets.EC2_HOST }}
         USER_NAME: ${{ secrets.EC2_USER }}
+        ENV_CONTENT: ${{ secrets.ENV }}
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
         ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} '
@@ -72,6 +73,10 @@ jobs:
           
           echo "Changing to /home/opc/docker directory..."
           cd /home/opc/docker
+          
+          # Create or update .env file
+          echo "Creating .env file..."
+          echo "${{ secrets.ENV_CONTENT }}" > /home/opc/docker/fastapi/.env
           
           # Login to GitHub Container Registry
           echo "Logging in to GitHub Container Registry..."
