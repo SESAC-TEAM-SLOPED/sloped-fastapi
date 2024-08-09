@@ -87,7 +87,7 @@ jobs:
           echo "${{ secrets.ENV_CONTENT }}" > .env
           
           # Update docker-compose.yml to mount .env file
-          sed -i "/image: ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}:latest/a\    volumes:\n      - ./env:/app/.env" docker-compose.yml
+          sed -i "/image: ${REGISTRY}\/${REPO_LOWER}:latest/a\\    volumes:\\n      - ./.env:/app/.env" docker-compose.yml
           
           # Stop the existing FastAPI container
           echo "Stopping existing FastAPI container..."
